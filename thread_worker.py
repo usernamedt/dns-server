@@ -29,7 +29,7 @@ class Worker(Thread):
                 try:
                     func(*args, **kwargs)
                 except Exception as e:
-                    logging.error(logging.info(str(e) + ' // ' + traceback.format_exc()))
+                    logging.error(str(e))
                 self.tasks.task_done()
             except Empty as e:
                 pass

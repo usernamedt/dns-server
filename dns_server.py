@@ -36,7 +36,7 @@ class DnsServer:
                 s.close()
                 break
             except Exception as e:
-                logging.info(str(e) + ' // ' + traceback.format_exc())
+                logging.info(str(e))
                 s.close()
                 break
 
