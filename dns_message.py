@@ -50,8 +50,7 @@ class DnsMessage:
         result += self.header.header_bits
         for question in self.questions:
             result += question.get_bits()
-        for record in [self.ans_records, self.auth_records, self.add_records]:
-            for answer in record:
-                result += answer.get_bits()
+        for answer in self.ans_records:
+            result += answer.get_bits()
         return result
 

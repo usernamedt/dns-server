@@ -18,7 +18,11 @@ class DnsHeader:
 
     @property
     def qr(self):
-        return ba2int(self.header_bits[16:17])
+        return ba2int(self.header_bits[16])
+
+    @qr.setter
+    def qr(self, val):
+        self.header_bits[16] = val
 
     @property
     def op_code(self):

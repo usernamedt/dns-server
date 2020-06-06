@@ -11,6 +11,9 @@ class DnsName:
         else:
             self.val = name
 
+    def __str__(self):
+        return self.val
+
     def _parse(self, bytestream, src_bytes=None):
         length = bytestream.read(1)[0]
         if length != 0:

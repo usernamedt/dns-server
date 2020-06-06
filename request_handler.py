@@ -1,3 +1,4 @@
+import logging
 import socket
 from typing import List
 
@@ -16,17 +17,28 @@ class RequestHandler:
     def handle_query(self, query_bytes):
         query_msg = DnsMessage(query_bytes)
         question = query_msg.questions[0]
+        logging.info(f'Incoming request for {question.name}')
         answers = self.__cache.get_answers(question.name.val, question.q_type)
 
         if not answers:
+            logging.info(f'Could not find {question.name} in cache, forwarding to '
+                         f'{self.__config.forwarder_host}:{self.__config.forwarder_port}')
             frw_response = self.fetch_from_forwarder(query_bytes)
             if not frw_response:
                 response = self.make_response(query_msg, [])
+                logging.info(f'Timeout waiting for '
+                             f'{self.__config.forwarder_host}:{self.__config.forwarder_port}'
+                             f'to lookup {question.name}')
             else:
                 response = frw_response
-                self.__cache.add_entry(DnsMessage(frw_response))
+                self.__cache.add_record(DnsMessage(frw_response))
+                logging.info(f'Received response from'
+                             f'{self.__config.forwarder_host}:{self.__config.forwarder_port}'
+                             f'about {question.name}')
         else:
             response = self.make_response(query_msg, answers)
+            logging.info(f'Found {question.name} in cache!')
+        logging.info(f'Sending response about {question.name}')
         return response
 
     @staticmethod
@@ -34,6 +46,7 @@ class RequestHandler:
         query_msg.header.total_answer_rrs = len(answers)
         query_msg.header.total_additional_rrs = 0
         query_msg.header.total_authority_rrs = 0
+        query_msg.header.qr = 1
         query_msg.ans_records = answers
         return query_msg.get_bits()
 

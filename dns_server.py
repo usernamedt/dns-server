@@ -20,7 +20,8 @@ class DnsServer:
                             format='%(asctime)s %(message)s')
         self.thread_pool = ThreadPool()
         cache_dir = Path.cwd() / self.__config.cache_dir
-        self.request_handler = RequestHandler(CacheStorage(cache_dir))
+        self.cache = CacheStorage(cache_dir)
+        self.request_handler = RequestHandler(self.cache)
 
     def run(self):
         """Binds, listens, processing DNS requests on socket"""
@@ -28,7 +29,7 @@ class DnsServer:
         s = socket(AF_INET, SOCK_DGRAM)
         s.bind((self.__config.server_host, self.__config.server_port))
         s.settimeout(self.__config.server_timeout)
-        logging.info(f'Launched at {self.__config.server_port}')
+        logging.info(f'Launched at {self.__config.server_host}:{self.__config.server_port}')
         while True:
             try:
                 data, addr = s.recvfrom(self.__config.recv_buff_size)
@@ -48,8 +49,9 @@ class DnsServer:
 
     def __handle_exit(self, signal, frame):
         logging.info("Received SIGINT, shutting down threads...")
-        print("bye-bye...")
+        print("shutting down...")
         self.thread_pool.tasks.join()
         self.thread_pool.terminate_all_workers()
-        logging.info("Threads stopped, will now exit")
+        logging.info("Threads stopped, updating cache")
+        self.cache.cleanup()
         sys.exit(0)
